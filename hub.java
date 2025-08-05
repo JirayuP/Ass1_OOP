@@ -1,11 +1,10 @@
-
 public class hub {
     private double[][] base;
-    private double[][] top;
+    private double[][] top_horizon_offset;
     private double[][] volume;
-    private double[][] persent;
-    private double area=150;
-    private double fc=2500;
+    private double[][] persentage;
+    private double cell=150;
+    private double fluidContact=2500;
     private String txt;
     public hub(){
         // to use method
@@ -20,16 +19,16 @@ public class hub {
         setthis();
     }
     public void setfluidcontact(double fc) {
-        this.fc = fc;
+        this.fluidContact = fc;
         setthis();
     }
     private void setthis() {
         int[][] intbase = toinfoBase(txt);
         int[][] inttop = toinfoTop(intbase);
         base = todouble(intbase);
-        top = todouble(inttop);
-        volume = tovolume(top);
-        persent = topersent(top);
+        top_horizon_offset = todouble(inttop);
+        volume = tovolume(top_horizon_offset);
+        persentage = topersent(top_horizon_offset);
     }
     private int[][] toinfoBase (String str) {
         String[] splitline = str.split("\n");  //sinificant
@@ -77,8 +76,8 @@ public class hub {
         double[][] Arv = new double[Ar.length][Ar[0].length];
         for(int i=0;i<Ar.length;i=i+1){
             for(int j=0;j<Ar[i].length;j=j+1){
-                if(base[i][j]>fc && top[i][j]<fc){
-                    Arv[i][j] = area*area*(fc-Ar[i][j]);
+                if(base[i][j]>fluidContact && top_horizon_offset[i][j]<fluidContact){
+                    Arv[i][j] = cell*cell*(fluidContact-Ar[i][j]);
                 }
                 else{
                     Arv[i][j] = 0;
@@ -91,7 +90,7 @@ public class hub {
         double[][] Arp = new double[Ar.length][Ar[0].length];
         for(int i=0;i<Ar.length;i=i+1){
             for(int j=0;j<Ar[i].length;j=j+1){
-                Arp[i][j] = ((fc-Ar[i][j])/200)*100;
+                Arp[i][j] = ((fluidContact-Ar[i][j])/200)*100;
                 if(Arp[i][j] > 100){
                     Arp[i][j] = 0;
                 }
@@ -104,34 +103,35 @@ public class hub {
     }
 
     public double getfluidcontact() {
-        return this.fc;
+        return this.fluidContact;
     }
     public double[][]  getBase() {
         return this.base;
     }
     public double[][] getTop() {
-        return this.top;
+        return this.top_horizon_offset;
     }
     public double getBase(int index1,int index2) {
         return this.base[index1][index2];
     }
     public double getTop(int index1,int index2) {
-        return this.top[index1][index2];
+        return this.top_horizon_offset[index1][index2];
     }
     public double[][] getvolume(){
         return this.volume;
     }
-    public double[][] getpersent(){
-        return this.persent;
+    public double[][] getpersentage(){
+        return this.persentage;
     }
     public double getvolume(int index1,int index2){
         return this.volume[index1][index2];
     }
-    public double getpersent(int index1,int index2){
-        return this.persent[index1][index2];
+    public double getpersentage(int index1,int index2){
+        return this.persentage[index1][index2];
     }
     public String toString() {
         return "savadee kub";
     }
 
 }
+
