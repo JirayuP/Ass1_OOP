@@ -125,6 +125,7 @@ public class GasVolumeDashboardGUI extends JFrame {
         add(status, BorderLayout.SOUTH);
 
         setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
 
     // ====== Actions ======
@@ -373,4 +374,5 @@ public class GasVolumeDashboardGUI extends JFrame {
         SwingUtilities.invokeLater(() -> new GasVolumeDashboardGUI().setVisible(true));
     }
 }
+
 
