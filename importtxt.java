@@ -6,46 +6,46 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 
 public class importtxt {
-
     public importtxt() {
-
+        //nothing
     }
     public String importfile() {
-        String location;
-        String str="";
-        String textdata="";
         JFileChooser file =new JFileChooser();
         int response = file.showOpenDialog(null);
+
+        System.out.println(response); // 0 = approve , 1 = cancel, X
+
         if (response == JFileChooser.APPROVE_OPTION) {
+            String str="";
+            String textdata="";
             File filelocation = new File(file.getSelectedFile().getAbsolutePath());
-            System.out.println(filelocation);
+            System.out.println(filelocation);  // location
             try {
-                BufferedReader txt=new BufferedReader(new FileReader(filelocation));
+                BufferedReader txt=new BufferedReader(new FileReader(filelocation));  // location
                 for (; ; )
                 {
                     if (txt.ready())
                     {
-                        str=txt.readLine();// void = null
-                        textdata=textdata+str+"\n";
-                        System.out.println(str);
+                        str=txt.readLine();          // String (line)
+                        str = str.trim();
+                        textdata=textdata+str+"\n";  // +"\n" to count line
+                        //System.out.println(str);
                     }
                     else
                     {
                         break;
                     }
                 }
-                //return textdata;
             }
             catch (FileNotFoundException err) {
             }
             catch (IOException err){
             }
+            System.out.println(textdata);  // test
             return textdata;
         }
         else {
             return "";
         }
-
-
     }
 }
