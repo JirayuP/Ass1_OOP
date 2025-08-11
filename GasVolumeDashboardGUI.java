@@ -359,21 +359,11 @@ public class GasVolumeDashboardGUI extends JFrame {
          b.setBorder(BorderFactory.createLineBorder(Color.WHITE));
     b.setFocusPainted(false);
     b.setOpaque(true);
-
-    // ✅ ปรับฟอนต์ให้ใหญ่และหนา
     b.setFont(new Font("Segoe UI", Font.BOLD, 14));
-
-    // ✅ จัดข้อความให้อยู่กลาง
     b.setHorizontalAlignment(SwingConstants.CENTER);
     b.setVerticalAlignment(SwingConstants.CENTER);
-
-    // ✅ เพิ่ม padding รอบข้อความ
     b.setMargin(new Insets(2, 2, 2, 2));
-
-    // ✅ แสดงเป็นเปอร์เซ็นต์ชัดๆ
     b.setText(DFP.format(pct)); 
-
-    // ✅ เพิ่ม tooltip สำหรับรายละเอียด
     b.setToolTipText("คลิกเพื่อเพิ่ม/ลบจาก Result");
     }
 
@@ -383,3 +373,4 @@ public class GasVolumeDashboardGUI extends JFrame {
         SwingUtilities.invokeLater(() -> new GasVolumeDashboardGUI().setVisible(true));
     }
 }
+
