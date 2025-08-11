@@ -1,39 +1,38 @@
 public class hub {
-    private double[][] base;
-    private double[][] top_horizon_offset;
-    private double[][] volume;
-    private double[][] persentage;
+    private double[][] base;               //getter method
+    private double[][] top_horizon_offset; //getter method
+    private double[][] volume;             //getter method
+    private double[][] persentage;         //getter method
     private double cell=150;
-    private double fluidContact=2500;
-    private String txt;
+    private double fluidContact=2500;      //can set new value
+    private String txt; //txt (data of this class/Object)
     public hub(){
         // to use method
         //
     }
-    public hub(String str){
+    public hub(String str){ //set object (constructor)
+        this.txt = str;
+        setthis();     // set object
+    }
+    public void set(String str){  //set object (by method)
         this.txt = str;
         setthis();
     }
-    public void set(String str){
-        this.txt = str;
-        setthis();
-    }
-    public void setfluidcontact(double fc) {
-        this.fluidContact = fc;
-        setthis();
+    public void setfluidcontact(double newinput) { //set object (by method)
+        this.fluidContact = newinput;
+        setthis();//set fluidcontact and update all attribute
     }
     private void setthis() {
-        int[][] intbase = toinfoBase(txt);
-        int[][] inttop = toinfoTop(intbase);
-        base = todouble(intbase);
-        top_horizon_offset = todouble(inttop);
-        volume = tovolume(top_horizon_offset);
+        int[][] intbase = toinfoBase(txt);         //to base
+        int[][] inttop = toinfoTop(intbase);       //turn base into Top
+        base = todouble(intbase);                  //to double and set this object
+        top_horizon_offset = todouble(inttop);     //to double and set this object
+        volume = tovolume(top_horizon_offset);    
         persentage = topersent(top_horizon_offset);
     }
     private int[][] toinfoBase (String str) {
         String[] splitline = str.split("\n");  //sinificant
-        String[] ins = str.split(" ");
-        String str2 = str.replaceAll("\n", "");
+        String str2 = str.replaceAll("\n", " ");
         String[] ins2 = str2.split(" ");
 
         int n=splitline.length;
@@ -48,7 +47,6 @@ public class hub {
             for(int j=0;j<row;j=j+1){
                 infoA[i][j]=Integer.parseInt(ins2[count]);
                 count=count+1;
-                //System.out.println(infoA[i][j]+" "+count +"["+i+"]"+"["+j+"]");
             }
         }
         return infoA;
@@ -58,19 +56,18 @@ public class hub {
         for(int i=0;i<Ar.length;i=i+1){
             for(int j=0;j<Ar[i].length;j=j+1){
                 tophorizon[i][j]=Ar[i][j]-200;
-                //System.out.println(tophorizon[i][j]+" "+i+","+j);
             }
         }
         return tophorizon;
     }
-    private double[][] todouble (int[][] Ar){
-        double[][] Ard = new double[Ar.length][Ar[0].length];
-        for(int i=0;i<Ar.length;i=i+1){
-            for(int j=0;j<Ar[i].length;j=j+1){
-                Ard[i][j]=(float)(Ar[i][j]);
+    private double[][] todouble (int[][] Arrayint){
+        double[][] Arrraydouble = new double[Arrayint.length][Arrayint[0].length];
+        for(int i=0;i<Arrayint.length;i=i+1){
+            for(int j=0;j<Arrayint[i].length;j=j+1){
+                Arrraydouble[i][j]=(float)(Arrayint[i][j]);
             }
         }
-        return Ard;
+        return Arrraydouble;  //turn int to double
     }
     private double[][] tovolume(double[][] Ar){
         double[][] Arv = new double[Ar.length][Ar[0].length];
@@ -132,6 +129,6 @@ public class hub {
     public String toString() {
         return "savadee kub";
     }
-
 }
+
 
