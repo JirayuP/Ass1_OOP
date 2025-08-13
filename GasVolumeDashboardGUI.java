@@ -95,7 +95,7 @@ public class GasVolumeDashboardGUI extends JFrame {
         dashboardWrap.setBorder(boxBorder("Dashboard"));
         dashboardWrap.add(placeholder("Please open a file to begin."), BorderLayout.CENTER);
 
-        gc.gridx=0; gc.weightx=0.66;
+        gc.gridx=0; gc.weightx=0.77;
         center.add(dashboardWrap, gc);
 
         String[] cols = {"Row","Col","Base (m)","Top (m)","Gas (m)","Percent","Volume (m³)"};
@@ -108,7 +108,7 @@ public class GasVolumeDashboardGUI extends JFrame {
         resultPanel.setBorder(boxBorder("Result"));
         resultPanel.add(new JScrollPane(resultTable), BorderLayout.CENTER);
 
-        gc.gridx=1; gc.weightx=0.34; gc.insets = new Insets(0,0,0,0);
+        gc.gridx=1; gc.weightx=0.23; gc.insets = new Insets(0,0,0,0);
         center.add(resultPanel, gc);
         add(center, BorderLayout.CENTER);
 
@@ -374,5 +374,6 @@ public class GasVolumeDashboardGUI extends JFrame {
         SwingUtilities.invokeLater(() -> new GasVolumeDashboardGUI().setVisible(true));
     }
 }
+
 
 
