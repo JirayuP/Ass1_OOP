@@ -11,87 +11,82 @@ public class hub {
     }
     public hub(String str){ //set object (constructor)
         this.txt = str;
-        setthis();  // set object
+        setthis();          // set object
     }
     public void set(String str){  //set object (by method)
         this.txt = str;
-        setthis();  // set object
+        setthis();                // set object
     }
     public void setfluidcontact(double newinput) { //set object (by method)
         this.fluidContact = newinput;
-        setthis(); //set fluidcontact and update all attribute
+        setthis();           //set fluidcontact and update all attribute
     }
     private void setthis() {
-        int[][] intbase = toinfoBase(txt);         //to base
-        int[][] inttop = toinfoTop(intbase);       //turn base into Top
-        base = todouble(intbase);                  //to double and set this object
-        top_horizon_offset = todouble(inttop);     //to double and set this object
+        base = toinfoBase(txt);                   //to base
+        top_horizon_offset = toinfoTop(base);     //turn base into Top
         volume = tovolume(top_horizon_offset);
         persentage = topersent(top_horizon_offset);
     }
-    private int[][] toinfoBase (String str) {
+    private double[][] toinfoBase (String str) {
         String[] splitline = str.split("\n");  // count line ( .length ) by "\n"
-        String str2 = str.replaceAll("\n", " ");
-        String[] ins2 = str2.split(" ");
+        String str2 = str.replaceAll("\n", " ");  //turn "\n" into " "
+        String[] infoStringAr = str2.split(" ");    // All info []
 
         int n=splitline.length;    // count line
 
         int col=n;
-        int row=(ins2.length)/n;
+        int row=(infoStringAr.length)/n;
         System.out.println("col:"+col);  // test output
         System.out.println("row:"+row);  // test output
-        int[][] infoA_int = new int[col][row];
-        int count=0;    //count
+        double[][] infoBaseAr = new double[col][row];
+        int count=0;            //count
         for(int i=0;i<col;i=i+1){
             for(int j=0;j<row;j=j+1){
-                infoA_int[i][j]=Integer.parseInt(ins2[count]);
+                infoBaseAr[i][j]=Double.parseDouble(infoStringAr[count]);
                 count=count+1;  //count
             }
         }
-        return infoA_int;
+        return infoBaseAr;
     }
-    private int[][] toinfoTop (int[][] Ar){
-        int[][] tophorizon = new int[Ar.length][Ar[0].length];
+    private double[][] toinfoTop (double[][] Ar){    //Ar = base                   // to Top
+        double[][] tophorizon = new double[Ar.length][Ar[0].length];
         for(int i=0;i<Ar.length;i=i+1){
             for(int j=0;j<Ar[i].length;j=j+1){   // Ar = array base
                 tophorizon[i][j]=Ar[i][j]-200;   // top = base-200
+                if(tophorizon[i][j]<0){
+                    tophorizon[i][j]=0;          //not -
+                }
             }
         }
         return tophorizon;
     }
-    private double[][] todouble (int[][] Arrayint){
-        double[][] Arrraydouble = new double[Arrayint.length][Arrayint[0].length];
-        for(int i=0;i<Arrayint.length;i=i+1){
-            for(int j=0;j<Arrayint[i].length;j=j+1){
-                Arrraydouble[i][j]=(float)(Arrayint[i][j]);
-            }
-        }
-        return Arrraydouble;  //turn int to double
-    }
-    private double[][] tovolume(double[][] Ar){
+    private double[][] tovolume(double[][] Ar){   //Ar = Top
         double[][] Arrayvolume = new double[Ar.length][Ar[0].length];
         for(int i=0;i<Arrayvolume.length;i=i+1){
             for(int j=0;j<Ar[i].length;j=j+1){
-                if(base[i][j]>fluidContact && top_horizon_offset[i][j]<fluidContact){
+                if(base[i][j]<fluidContact){         //Base higher than fluid
+                    Arrayvolume[i][j]=cell*cell*200;
+                }
+                else if(base[i][j]>fluidContact && top_horizon_offset[i][j]<fluidContact){
                     Arrayvolume[i][j] = cell*cell*(fluidContact-Ar[i][j]);
                 }
-                else{
-                    Arrayvolume[i][j] = 0; //base < fluidContact
+                else{   // Top under fluid
+                    Arrayvolume[i][j] = 0;
                 }
             }
         }
         return Arrayvolume;
     }
-    private double[][] topersent(double[][] Ar){
+    private double[][] topersent(double[][] Ar){  //Ar = Top
         double[][] Arraypersent = new double[Ar.length][Ar[0].length];
         for(int i=0;i<Ar.length;i=i+1){
             for(int j=0;j<Ar[i].length;j=j+1){
-                Arraypersent[i][j] = ((fluidContact-Ar[i][j])/200)*100;
-                if(Arraypersent[i][j] > 100){
-                    Arraypersent[i][j] = 0;    // persent 0-100
+                Arraypersent[i][j] = ((fluidContact-Ar[i][j])/200)*100; //Ar = TOP
+                if(Arraypersent[i][j] > 100){    //Base higher than fluid
+                    Arraypersent[i][j] = 100;    // persent 0-100
                 }
                 else if(Arraypersent[i][j] < 0){
-                    Arraypersent[i][j] = 0;    // persent 0-100
+                    Arraypersent[i][j] = 0;     // persent 0-100
                 }
             }
         }
@@ -123,6 +118,9 @@ public class hub {
     }
     public double getpersentage(int index1,int index2){
         return this.persentage[index1][index2];
+    }
+    public String gettxt() {
+        return this.txt;
     }
     public String toString() {
         return "savadee kub";
