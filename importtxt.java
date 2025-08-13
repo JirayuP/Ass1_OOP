@@ -22,17 +22,14 @@ public class importtxt {
             System.out.println(filelocation);  // location
             try {
                 BufferedReader txt=new BufferedReader(new FileReader(filelocation));  // location
-                for (; ; )
-                {
-                    if (txt.ready())
-                    {
+                for (; ; ) {
+                    if (txt.ready()) {
                         str=txt.readLine();          // String (line)
                         str = str.trim();
                         textdata=textdata+str+"\n";  // +"\n" to count line
                         //System.out.println(str);
                     }
-                    else
-                    {
+                    else {
                         break;
                     }
                 }
