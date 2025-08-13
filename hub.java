@@ -1,183 +1,133 @@
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.JButton;
-import javax.swing.event.AncestorListener;
-import java.awt.GridLayout;
-import java.awt.Color;
-import java.awt.TextField;
-import java.awt.TextArea;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-
-public class ProgramFrame extends JFrame implements MouseMotionListener, ActionListener {
-    JTextField xytext=new JTextField();
-    ThisScreen screen = new ThisScreen();
-
-    JButton bmap[][];
-    hub calinfo = new hub();
-    JButton bopenf =new JButton("Open file");
-    JPanel lowpanel = new JPanel();
-    JPanel panelmap = new JPanel();
-
-    JPanel panel2 = new JPanel();
-    String sumoutput = "";
-    TextArea showoutput = new TextArea();  // in panel 2
-
-    TextArea showbase = new TextArea(); // low panel  awt
-    TextField state = new TextField();
-    JTextField inputfulid = new JTextField();
-    JButton setfluid = new JButton("Set fluid"); //low
-    public ProgramFrame() {
-        int w = screen.getWidthScreen();
-        int h = screen.getHeightScreen();
-        String datadepth="";
-        setLocation(0,0);
-        setSize(w,h);
-        setLayout(null);
-
-        addMouseMotionListener(this); // !!!!
-        bopenf.addActionListener(this);
-        setfluid.addActionListener(this);
-
-        xytext.setSize(150,30);
-        xytext.setLocation(w-150,0);
-        add(xytext);
-
-
-        lowpanel.setLayout(null);
-        lowpanel.setSize(w-100,h-580);
-        lowpanel.setLocation(50,580);
-        lowpanel.setBackground(Color.GRAY);
-        add(lowpanel);
-        bopenf.setSize(200,50);  // low panel
-        bopenf.setLocation(0,0);
-        lowpanel.add(bopenf);                 //add
-        showbase.setSize(300,200);
-        showbase.setLocation(220,10);
-        lowpanel.add(showbase);
-        inputfulid.setSize(200,50);
-        inputfulid.setLocation(540,10);
-        lowpanel.add(inputfulid);
-        setfluid.setSize(200,50);
-        setfluid.setLocation(740,10);
-        lowpanel.add(setfluid);
-        state.setSize(300,50);
-        state.setLocation(1000,10);
-        lowpanel.add(state);
-
-        panel2.setLayout(null);
-        panel2.setLocation(w-450,20);
-        panel2.setSize(400,500);
-        panel2.setBackground(Color.DARK_GRAY);
-        add(panel2);
-        showoutput.setSize(300,400);
-        showoutput.setLocation(50,50);
-        panel2.add(showoutput);
-
+public class hub {
+    private double[][] base;                //getter method
+    private double[][] top_horizon_offset;  //getter method
+    private double[][] volume;              //getter method
+    private double[][] persentage;          //getter method
+    private double cell=150;
+    private double fluidContact=2500;       //set 2500 is defult
+    private String txt;                     //txt (data of this class/Object)
+    public hub(){
+        // to use method
     }
-    public void map(String datadepth){
+    public hub(String str){ //set object (constructor)
+        this.txt = str;
+        setthis();          // set object
+    }
+    public void set(String str){  //set object (by method)
+        this.txt = str;
+        setthis();                // set object
+    }
+    public void setfluidcontact(double newinput) { //set object (by method)
+        this.fluidContact = newinput;
+        setthis();           //set fluidcontact and update all attribute
+    }
+    private void setthis() {
+        base = toinfoBase(txt);                   //to base
+        top_horizon_offset = toinfoTop(base);     //turn base into Top
+        volume = tovolume(top_horizon_offset);
+        persentage = topersent(top_horizon_offset);
+    }
+    private double[][] toinfoBase (String str) {
+        String[] splitline = str.split("\n");  // count line ( .length ) by "\n"
+        String str2 = str.replaceAll("\n", " ");  //turn "\n" into " "
+        String[] infoStringAr = str2.split(" ");    // All info []
 
-        calinfo.set(datadepth);// set object(class)
-        double[][] AB = calinfo.getBase(); //arraybase
-        panelmap.setLayout(new GridLayout(AB.length, AB[0].length));
-        panelmap.setSize(1000,500);
-        panelmap.setLocation(50,20);
-        add(panelmap);
+        int n=splitline.length;    // count line
 
-        //JButton[][] bmap = new JButton[AB.length][AB[0].length];
-        bmap = new JButton[AB.length][AB[0].length];
-        for(int i=0;i<AB.length;i=i+1){
-            for(int j=0;j<AB[i].length;j=j+1){
-                bmap[i][j] = new JButton();
-                if (calinfo.getpersentage(i,j)>50){
-                    bmap[i][j].setBackground(Color.GREEN);
-                }
-                else if(calinfo.getpersentage(i,j)<50 && calinfo.getpersentage(i,j)>0.00){
-                    bmap[i][j].setBackground(Color.YELLOW);
-                }
-                else {
-                    bmap[i][j].setBackground(Color.RED);
-                }
-                int index1 = i;
-                int index2 = j;
-                bmap[i][j].addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {     //inner class
-                        if(e.getSource() == bmap[index1][index2]){
-                            state.setText("");
-                            sumoutput = sumoutput+"["+index1+"]["+index2+"]\n"
-                                        +"Base Horizon : "+calinfo.getBase(index1,index2)+"\n"
-                                        +"Top Horizon : "+calinfo.getTop(index1,index2)+"\n"
-                                        +"Volume : "+calinfo.getvolume(index1,index2)+"\n"
-                                        +"Persentage : "+calinfo.getpersentage(index1,index2)+"\n"
-                                        +"Fluid Contact = "+calinfo.getfluidcontact()+"\n";
-                            showoutput.setText(sumoutput); //panel2
-                        }
-                    }                                                //inner class
-                });
-                panelmap.add(bmap[i][j]);
+        int col=n;
+        int row=(infoStringAr.length)/n;
+        System.out.println("col:"+col);  // test output
+        System.out.println("row:"+row);  // test output
+        double[][] infoBaseAr = new double[col][row];
+        int count=0;            //count
+        for(int i=0;i<col;i=i+1){
+            for(int j=0;j<row;j=j+1){
+                infoBaseAr[i][j]=Double.parseDouble(infoStringAr[count]);
+                count=count+1;  //count
             }
         }
+        return infoBaseAr;
     }
-    @Override
-    public void mouseDragged(MouseEvent e) {
-    }
-    @Override
-    public void mouseMoved(MouseEvent e) {
-        xytext.setText("x="+e.getX()+" "+"y="+e.getY());
-    }
-    @Override
-    public void actionPerformed(ActionEvent e){
-        if(e.getSource() == bopenf){
-            importtxt file = new importtxt();
-            String data = file.importfile();   //String data
-            if(data == null || data.equals("")){
-                //do nothing when press X or cancel
-                //else, return ""; , null = no data
-                state.setText("no import");
+    private double[][] toinfoTop (double[][] Ar){    //Ar = base                   // to Top
+        double[][] tophorizon = new double[Ar.length][Ar[0].length];
+        for(int i=0;i<Ar.length;i=i+1){
+            for(int j=0;j<Ar[i].length;j=j+1){   // Ar = array base
+                tophorizon[i][j]=Ar[i][j]-200;   // top = base-200
+                if(tophorizon[i][j]<0){
+                    tophorizon[i][j]=0;          //not -
+                }
             }
-            else {
-                if(panelmap.isShowing()){
-                    panelmap.removeAll();
-                /*
-                for(int i=0;i<bmap.length;i=i+1){
-                    for(int j=0;j<bmap[i].length;j=j+1){
-                        panelmap.remove(bmap[i][j]);
+        }
+        return tophorizon;
+    }
+    private double[][] tovolume(double[][] Ar){   //Ar = Top
+        double[][] Arrayvolume = new double[Ar.length][Ar[0].length];
+        for(int i=0;i<Arrayvolume.length;i=i+1){
+            for(int j=0;j<Ar[i].length;j=j+1){
+                if(base[i][j]<fluidContact){         //Base higher than fluid
+                    if(base[i][j] < 200) {      //Ar = top , top = 0
+                        Arrayvolume[i][j]=cell*cell*base[i][j];
                     }
-                }*/
-                }
-                map(data);
-                showbase.setText(data); // low panel (show txt)
-                panelmap.repaint();     //update GUI components.
-                state.setText("import pass");
-                sumoutput = "";
-                showoutput.setText("");
-                setVisible(true);
-            }
-        }
-        else if(e.getSource() == setfluid){
-            String inputfulidText = inputfulid.getText();
-            if( calinfo.gettxt() == null ){
-                //do nothing
-                state.setText("setfluidcontact error");
-            }
-            else {
-                try{
-                    double fluid = Double.parseDouble(inputfulidText);  //setfluidcontact(double ... );
-                    calinfo.setfluidcontact(fluid);
-                    if(panelmap.isShowing()){
-                        panelmap.removeAll();
+                    else {                   //base >= 200
+                        Arrayvolume[i][j] = cell * cell * 200;
                     }
-                    map(calinfo.gettxt());
-                    state.setText("setfluidcontact pass");
-                    setVisible(true);
                 }
-                catch(NumberFormatException err){
-                    state.setText("setfluidcontact error : can not parse");
+                else if(base[i][j]>fluidContact && top_horizon_offset[i][j]<fluidContact){  //normal
+                    Arrayvolume[i][j] = cell*cell*(fluidContact-Ar[i][j]);
+                }
+                else{   // Top under fluid
+                    Arrayvolume[i][j] = 0;
                 }
             }
         }
+        return Arrayvolume;
+    }
+    private double[][] topersent(double[][] Ar){  //Ar = Top
+        double[][] Arraypersent = new double[Ar.length][Ar[0].length];
+        for(int i=0;i<Ar.length;i=i+1){
+            for(int j=0;j<Ar[i].length;j=j+1){
+                Arraypersent[i][j] = ((fluidContact-Ar[i][j])/200)*100; //Ar = TOP
+                if(Arraypersent[i][j] > 100){    //Base higher than fluid
+                    Arraypersent[i][j] = 100;    // persent 0-100
+                }
+                else if(Arraypersent[i][j] < 0){
+                    Arraypersent[i][j] = 0;     // persent 0-100
+                }
+            }
+        }
+        return Arraypersent;
+    }
+    public double getfluidcontact() {
+        return this.fluidContact;
+    }
+    public double[][]  getBase() {
+        return this.base;
+    }
+    public double[][] getTop() {
+        return this.top_horizon_offset;
+    }
+    public double getBase(int index1,int index2) {
+        return this.base[index1][index2];
+    }
+    public double getTop(int index1,int index2) {
+        return this.top_horizon_offset[index1][index2];
+    }
+    public double[][] getvolume(){
+        return this.volume;
+    }
+    public double[][] getpersentage(){
+        return this.persentage;
+    }
+    public double getvolume(int index1,int index2){
+        return this.volume[index1][index2];
+    }
+    public double getpersentage(int index1,int index2){
+        return this.persentage[index1][index2];
+    }
+    public String gettxt() {
+        return this.txt;
+    }
+    public String toString() {
+        return "savadee kub";
     }
 }
