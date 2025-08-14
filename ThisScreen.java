@@ -5,7 +5,9 @@ public class ThisScreen {
     private int width;
     private int height;
     public ThisScreen() {
-        Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
+        //Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
+        Dimension size = new Dimension();
+        size = Toolkit.getDefaultToolkit().getScreenSize();
         width = (int)size.getWidth();
         height = (int)size.getHeight();
         System.out.println(width+" "+height);
