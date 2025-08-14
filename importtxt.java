@@ -21,7 +21,7 @@ public class importtxt {
             File filelocation = new File(file.getSelectedFile().getAbsolutePath());
             System.out.println(filelocation);  // location
             try {
-                BufferedReader txt=new BufferedReader(new FileReader(filelocation));  // location
+                BufferedReader txt=new BufferedReader(new FileReader(filelocation));  //String location
                 for (; ; ) {
                     if (txt.ready()) {
                         str=txt.readLine();          // String (line)
