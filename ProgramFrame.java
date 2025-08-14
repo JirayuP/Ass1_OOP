@@ -12,23 +12,24 @@ import java.awt.event.MouseEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
-public class ProgramFrame extends JFrame implements MouseMotionListener, ActionListener {
-    JTextField xytext=new JTextField();
-    ThisScreen screen = new ThisScreen();
+public class ProgramFrame extends JFrame implements ActionListener {
+    ThisScreen screen = new ThisScreen();  //set frame
+    hub calinfo = new hub(); //set data,get data
 
-    JButton bmap[][];
-    hub calinfo = new hub();
-    JButton bopenf =new JButton("Open file");
-    JPanel lowpanel = new JPanel();
     JPanel panelmap = new JPanel();
-    JPanel panel2 = new JPanel();
+    JButton bmap[][];                //button map
 
-    String sumoutput = "";
-    TextArea showoutput = new TextArea();  // in panel 2
-    TextArea showbase = new TextArea(); // low panel  awt
-    TextField state = new TextField();
+    JPanel panel2 = new JPanel();
+    String sum_output = "";
+    TextArea show_output = new TextArea();  // in panel 2
+
+    JPanel lowpanel = new JPanel();
+    JButton openf =new JButton("Open file");
     JTextField inputfulid = new JTextField();
     JButton setfluid = new JButton("Set fluid"); //low
+    TextArea showbase = new TextArea();  // low panel  awt
+    TextField state = new TextField();   //ตกแต่ง ขวาสุด
+
     public ProgramFrame() {
         int w = screen.getWidthScreen();
         int h = screen.getHeightScreen();
@@ -37,23 +38,18 @@ public class ProgramFrame extends JFrame implements MouseMotionListener, ActionL
         setSize(w,h);
         setLayout(null);
 
-        addMouseMotionListener(this); // !!!!
-        bopenf.addActionListener(this);
+        // add .add
+        openf.addActionListener(this);
         setfluid.addActionListener(this);
-
-        xytext.setSize(150,30);
-        xytext.setLocation(w-150,0);
-        add(xytext);
-
 
         lowpanel.setLayout(null);
         lowpanel.setSize(w-100,h-580);
         lowpanel.setLocation(50,580);
         lowpanel.setBackground(Color.GRAY);
         add(lowpanel);
-        bopenf.setSize(200,50);  // low panel
-        bopenf.setLocation(0,0);
-        lowpanel.add(bopenf);                 //add
+        openf.setSize(200,50);  // low panel
+        openf.setLocation(0,0);
+        lowpanel.add(openf);                 //add
         showbase.setSize(300,200);
         showbase.setLocation(220,10);
         lowpanel.add(showbase);
@@ -72,9 +68,9 @@ public class ProgramFrame extends JFrame implements MouseMotionListener, ActionL
         panel2.setSize(400,500);
         panel2.setBackground(Color.DARK_GRAY);
         add(panel2);
-        showoutput.setSize(300,400);
-        showoutput.setLocation(50,50);
-        panel2.add(showoutput);
+        show_output.setSize(300,400);
+        show_output.setLocation(50,50);
+        panel2.add(show_output);
 
     }
     public void map(String datadepth){
@@ -106,13 +102,13 @@ public class ProgramFrame extends JFrame implements MouseMotionListener, ActionL
                     public void actionPerformed(ActionEvent e) {     //inner class
                         if(e.getSource() == bmap[index1][index2]){
                             state.setText("");
-                            sumoutput = sumoutput+"["+index1+"]["+index2+"]\n"
+                            sum_output = sum_output+"["+index1+"]["+index2+"]\n"
                                         +"Base Horizon : "+calinfo.getBase(index1,index2)+"\n"
                                         +"Top Horizon : "+calinfo.getTop(index1,index2)+"\n"
                                         +"Volume : "+calinfo.getvolume(index1,index2)+"\n"
                                         +"Persentage : "+calinfo.getpersentage(index1,index2)+"\n"
                                         +"Fluid Contact = "+calinfo.getfluidcontact()+"\n";
-                            showoutput.setText(sumoutput); //panel2
+                            show_output.setText(sum_output); //panel2
                         }
                     }                                                //inner class
                 });
@@ -121,15 +117,8 @@ public class ProgramFrame extends JFrame implements MouseMotionListener, ActionL
         }
     }
     @Override
-    public void mouseDragged(MouseEvent e) {
-    }
-    @Override
-    public void mouseMoved(MouseEvent e) {
-        xytext.setText("x="+e.getX()+" "+"y="+e.getY());
-    }
-    @Override
     public void actionPerformed(ActionEvent e){
-        if(e.getSource() == bopenf){
+        if(e.getSource() == openf){
             importtxt file = new importtxt();
             String data = file.importfile();   //String data
             if(data == null || data.equals("")){
@@ -149,10 +138,10 @@ public class ProgramFrame extends JFrame implements MouseMotionListener, ActionL
                 }
                 map(data);
                 showbase.setText(data); // low panel (show txt)
-                panelmap.repaint();//update GUI components.
+                panelmap.repaint();     //update GUI components.
                 state.setText("import pass");
-                sumoutput = "";
-                showoutput.setText("");
+                sum_output = "";
+                show_output.setText("");
                 setVisible(true);
             }
         }
