@@ -69,6 +69,7 @@ public class GasVolumeDashboardGUI extends JFrame {
         JLabel lblFluid = new JLabel("Fluid Contact (m)");
         lblFluid.setForeground(TXT_PRIMARY);
         tfFluid = new JTextField(10);
+        tfFluid.setText("2500");
         btnCalc = new JButton("Calculate Volume");
         stylePrimary(btnCalc);
         btnCalc.setEnabled(false);
@@ -351,6 +352,7 @@ public class GasVolumeDashboardGUI extends JFrame {
         SwingUtilities.invokeLater(() -> new GasVolumeDashboardGUI().setVisible(true));
     }
 }
+
 
 
 
