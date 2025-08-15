@@ -74,7 +74,7 @@ public class GasVolumeDashboardGUI extends JFrame {
         btnCalc.setEnabled(false);
         btnCalc.addActionListener(this::onCalculate);
         btnCancel = new JButton("Cancel");
-        styleGhost(btnCancel);
+        stylePrimary(btnCancel);
         btnCancel.addActionListener(e -> clearAll());
         top.add(lblFluid); top.add(tfFluid); top.add(btnCalc); top.add(btnCancel);
         top.add(Box.createHorizontalStrut(20));
@@ -295,12 +295,8 @@ public class GasVolumeDashboardGUI extends JFrame {
         p.add(l, BorderLayout.CENTER);
         return p;
     }
+ 
     private void stylePrimary(JButton b) {
-        b.setBackground(ACCENT);
-        b.setForeground(Color.WHITE);
-        b.setFocusPainted(false);
-    }
-    private void styleGhost(JButton b) {
         b.setBackground(new Color(245,245,245));
         b.setForeground(TXT_PRIMARY);
         b.setFocusPainted(false);
@@ -323,26 +319,8 @@ public class GasVolumeDashboardGUI extends JFrame {
             setBorder(BorderFactory.createEmptyBorder(4,6,4,6));
             setHorizontalAlignment(SwingConstants.CENTER);
             setFont(getFont().deriveFont(Font.BOLD, 12f));
-            setToolTipText("คลิกเพื่อเพิ่ม/ลบจาก Result");
         }
 
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            int w = getWidth(), h = getHeight();
-            int x = INSET, y = INSET, ww = w - INSET*2, hh = h - INSET*2;
-            g2.setColor(getBackground());
-            g2.fillRoundRect(x, y, ww, hh, RADIUS, RADIUS);
-            String text = DFP.format(percent);
-            FontMetrics fm = g2.getFontMetrics(getFont());
-            int tx = (w - fm.stringWidth(text)) / 2;
-            int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
-            g2.setColor(getForeground());
-            g2.setFont(getFont());
-            g2.drawString(text, tx, ty);
-            g2.dispose();
-        }
     }
 
     // กำหนดสี/ตัวอักษรของพิลล์ตามเปอร์เซ็นต์
@@ -365,7 +343,6 @@ public class GasVolumeDashboardGUI extends JFrame {
     b.setVerticalAlignment(SwingConstants.CENTER);
     b.setMargin(new Insets(2, 2, 2, 2));
     b.setText(DFP.format(pct)); 
-    b.setToolTipText("คลิกเพื่อเพิ่ม/ลบจาก Result");
     }
 
     // main
@@ -374,6 +351,7 @@ public class GasVolumeDashboardGUI extends JFrame {
         SwingUtilities.invokeLater(() -> new GasVolumeDashboardGUI().setVisible(true));
     }
 }
+
 
 
 
