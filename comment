@@ -11,7 +11,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 
-public class GasVolumeDashboardGUI extends JFrame {
+public class GasCalculate extends JFrame {
 
     // Theme กำหนดสี
     private static final Color BG_MAIN = new Color(245, 246, 248);
@@ -42,7 +42,7 @@ public class GasVolumeDashboardGUI extends JFrame {
     private final Map<String, Integer> rowIndexByKey = new HashMap<>();//แม็พ “r,c” → แถวในตาราง
     private final JFileChooser chooser = new JFileChooser();//กล่องเลือกไฟล์ (กรอง .txt)
 
-    public GasVolumeDashboardGUI() {
+    public GasCalculate() {
         super("Gas Volume Calculator");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1200, 720));
@@ -69,7 +69,7 @@ public class GasVolumeDashboardGUI extends JFrame {
         JLabel lblFluid = new JLabel("Fluid Contact (km)");
         lblFluid.setForeground(TXT_PRIMARY);
         tfFluid = new JTextField(10);
-        tfFluid.setText("2.5");
+        tfFluid.setText("2500");
         btnCalc = new JButton("Calculate Volume");
         stylePrimary(btnCalc);
         btnCalc.setEnabled(false);
@@ -358,11 +358,11 @@ public class GasVolumeDashboardGUI extends JFrame {
     }
 
     // main
-    public static void main(String[] args) {
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) {}
-        SwingUtilities.invokeLater(() -> new GasVolumeDashboardGUI().setVisible(true));
-    }
+public static void main(String[] args) {    
+        GasCalculate proframe = new GasCalculate();
+        proframe.setVisible(true);
+    
 }
 
-
+}
 
