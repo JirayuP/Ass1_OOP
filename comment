@@ -136,7 +136,7 @@ public class GasVolumeDashboardGUI extends JFrame {
         statusLabel.setText("Loading " + f.getName() + " ...");
         try {
             List<double[]> rows = new ArrayList<>();
-            int maxCols = 0;
+            int maxCols = 0;//ตัวแปรที่เก็บจำนวนคอลัมน์ (columns) ที่มากที่สุด
             for (String line : Files.readAllLines(f.toPath(), StandardCharsets.UTF_8)) { //อ่านทั้งไฟล์ เปิดไฟล์ข้อความ UTF-8
                 String s = line.trim();//ตัดช่องว่างเกิน (ซ้าย/ขวา) ของบรรทัดออก if (s.isEmpty()) continue; //ในไฟล์ว่าง ให้ข้ามไปคำสั่งถัดไป
                 String[] toks = s.split("[,\\s]+");//แยกค่าด้วยคอมม่า/ช่องว่าง
@@ -146,10 +146,17 @@ public class GasVolumeDashboardGUI extends JFrame {
             }
             if (rows.isEmpty()) throw new IllegalArgumentException("Empty file.");//ถ้าอ่านไฟล์ผิด → แจ้งกล่อง Error
             baseDepth = new double[rows.size()][maxCols];
-            for (int r=0;r<rows.size();r++) {
-                double[] src = rows.get(r);
-                for (int c=0;c<maxCols;c++) baseDepth[r][c] = (c<src.length)?src[c]:src[src.length-1];
-            }
+            for (int r = 0; r < rows.size(); r++) {
+                   double[] src = rows.get(r);
+            for (int c = 0; c < maxCols; c++) {
+                 if (c < src.length) {
+            baseDepth[r][c] = src[c];
+          }   else {
+            baseDepth[r][c] = src[src.length - 1];
+        }
+    }
+}
+
             btnCalc.setEnabled(true);//เปิดปุ่มคำนวณ
             statusLabel.setText("Loaded: " + baseDepth.length + " rows × " + baseDepth[0].length + " cols.");
             showEmptyGrid();
