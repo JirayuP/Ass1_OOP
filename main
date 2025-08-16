@@ -1,0 +1,367 @@
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.text.DecimalFormat;
+import java.util.*;
+import java.util.List;
+
+public class GasCalculate extends JFrame {
+
+    // Theme กำหนดสี
+    private static final Color BG_MAIN = new Color(245, 246, 248);
+    private static final Color BG_PANEL = Color.WHITE;
+    private static final Color TXT_PRIMARY = new Color(40, 40, 40);
+    private static final Color TXT_SECONDARY = new Color(110, 110, 110);
+    private static final Color GREEN = new Color(34, 197, 94);
+    private static final Color YELLOW = new Color(250, 204, 21);
+    private static final Color RED = new Color(239, 68, 68);
+
+    // Domain constants ค่าคงที่
+    private static final double CELL_W = 150.0, CELL_L = 150.0;
+    private static final double TOP_OFFSET = 200.0; // Top = Base - 200 m
+    private static final DecimalFormat DF0 = new DecimalFormat("#,##0");
+    static final DecimalFormat DFP = new DecimalFormat("0.0%");
+
+    // UI ตัวแปร
+    private JTextField tfFluid; // รับค่า Fluid Contact
+    private JButton btnCalc, btnCancel; //ปุ่ม คำนวนและยกเลิก
+    private JPanel dashboardWrap;//พื้นที่กริดแสดงผล
+    private JTable resultTable;//ตารางผลลัพธ์สำหรับเซลล์ที่ถูกเลือก คล้าย excll
+    private DefaultTableModel resultModel;//ตารางผลลัพธ์สำหรับเซลล์ที่ถูกเลือก Result
+    private JLabel totalVolLabel, statusLabel;//แถบแสดงสถานะ/ยอดรวม
+
+    // Data
+    private double[][] baseDepth = null;// ความลึกฐานที่อ่านจากไฟล์
+    private final Map<String, Integer> rowIndexByKey = new HashMap<>();//แม็พ “r,c” → แถวในตาราง
+    private final JFileChooser chooser = new JFileChooser();//กล่องเลือกไฟล์ (กรอง .txt)
+
+    public GasCalculate() {
+        super("Gas Volume Calculator");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setMinimumSize(new Dimension(1200, 720));
+        getContentPane().setBackground(BG_MAIN);
+        setLayout(new BorderLayout(8, 8));
+
+        // Menu
+        JMenuBar mb = new JMenuBar();
+        JMenu file = new JMenu("File");
+        JMenuItem mOpen = new JMenuItem("Open");
+        mOpen.addActionListener(this::onOpenFile);
+        file.add(mOpen);
+        mb.add(file);
+        setJMenuBar(mb);
+        chooser.setFileFilter(new FileNameExtensionFilter("Text Files", "txt"));
+
+        // Top
+        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 10));
+        top.setBackground(BG_PANEL);
+        top.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0,0,1,0,new Color(225,225,225)),
+                new EmptyBorder(6,12,6,12)
+        ));
+        JLabel lblFluid = new JLabel("Fluid Contact (m)");
+        lblFluid.setForeground(TXT_PRIMARY);
+        tfFluid = new JTextField(10);
+        tfFluid.setText("2500");
+        btnCalc = new JButton("Calculate Volume");
+        stylePrimary(btnCalc);
+        btnCalc.setEnabled(false);
+        btnCalc.addActionListener(this::onCalculate);
+        btnCancel = new JButton("Cancel");
+        stylePrimary(btnCancel);
+        btnCancel.addActionListener(e -> clearAll());
+        top.add(lblFluid); top.add(tfFluid); top.add(btnCalc); top.add(btnCancel);
+        top.add(Box.createHorizontalStrut(20));
+        top.add(buildLegend());
+        add(top, BorderLayout.NORTH);
+
+        // Center
+        JPanel center = new JPanel(new GridBagLayout());
+        center.setBackground(BG_MAIN);
+        center.setBorder(new EmptyBorder(10,10,10,10));
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.insets = new Insets(0,0,0,10);
+        gc.fill = GridBagConstraints.BOTH;
+        gc.weighty = 1;
+
+        dashboardWrap = new JPanel(new BorderLayout());
+        dashboardWrap.setBackground(BG_PANEL);
+        dashboardWrap.setBorder(boxBorder("Dashboard"));
+        dashboardWrap.add(placeholder("Please open a file to begin."), BorderLayout.CENTER);
+
+        gc.gridx=0; gc.weightx=0.77;
+        center.add(dashboardWrap, gc);
+
+        String[] cols = {"Row","Col","Base (m)","Top (m)","Gas (m)","Percent","Volume (m³)"};
+        resultModel = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){return false;} };//การสร้าง TableModel แบบแก้ไขไม่ได้
+        resultTable = new JTable(resultModel);
+        resultTable.setFillsViewportHeight(true);//ถ้าพื้นที่แสดงผล (viewport) ของตารางสูงกว่าความสูงจริงของแถวที่มี ให้เติมพื้นหลังของตารางจนเต็มพื้นที่
+        resultTable.setAutoCreateRowSorter(true);//การเรียงลำดับ  ของตารางให้อัตโนมัติ
+        JPanel resultPanel = new JPanel(new BorderLayout());
+        resultPanel.setBackground(BG_PANEL);
+        resultPanel.setBorder(boxBorder("Result"));
+        resultPanel.add(new JScrollPane(resultTable), BorderLayout.CENTER);
+
+        gc.gridx=1; gc.weightx=0.23; gc.insets = new Insets(0,0,0,0);
+        center.add(resultPanel, gc);
+        add(center, BorderLayout.CENTER);
+
+        // Status
+        JPanel status = new JPanel(new BorderLayout());
+        status.setBackground(BG_PANEL);
+        status.setBorder(BorderFactory.createMatteBorder(1,0,0,0,new Color(225,225,225)));
+        statusLabel = new JLabel("Ready.");
+        statusLabel.setForeground(TXT_SECONDARY);
+        totalVolLabel = new JLabel("Total Volume: -");
+        totalVolLabel.setForeground(TXT_PRIMARY);
+        status.add(statusLabel, BorderLayout.WEST);
+        status.add(totalVolLabel, BorderLayout.EAST);
+        add(status, BorderLayout.SOUTH);
+
+        setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+    }
+
+    //เปิดไฟล์
+    private void onOpenFile(ActionEvent ev) {
+        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return; //ตรวจสอบว่า ผู้ใช้เลือกไฟล์จริงหรือไม่ ถ้าไม่ได้เลือก → หยุดการทำงาน ไม่ต้องอ่านไฟล์ต่อ
+        File f = chooser.getSelectedFile();//ดึงไฟล์ที่ผู้ใช้เลือกจาก JFileChooser ออกมาเป็นอ็อบเจ็กต์ File เพื่อนำไปใช้งานต่อ
+        statusLabel.setText("Loading " + f.getName() + " ...");
+        try {
+            List<double[]> rows = new ArrayList<>();
+            int maxCols = 0;//ตัวแปรที่เก็บจำนวนคอลัมน์ (columns) ที่มากที่สุด
+            for (String line : Files.readAllLines(f.toPath(), StandardCharsets.UTF_8)) { //อ่านทั้งไฟล์ เปิดไฟล์ข้อความ UTF-8
+                String s = line.trim();//ตัดช่องว่างเกิน (ซ้าย/ขวา) ของบรรทัดออก if (s.isEmpty()) continue; //ในไฟล์ว่าง ให้ข้ามไปคำสั่งถัดไป
+                String[] toks = s.split("[,\\s]+");//แยกค่าด้วยคอมม่า/ช่องว่าง
+                double[] arr = new double[toks.length];//สร้างอาร์เรย์ชนิด double ขนาดเท่ากับจำนวน token ที่อ่านมา
+                for (int i=0;i<toks.length;i++) arr[i] = Double.parseDouble(toks[i]);
+                rows.add(arr); maxCols = Math.max(maxCols, arr.length);
+            }
+            if (rows.isEmpty()) throw new IllegalArgumentException("Empty file.");//ถ้าอ่านไฟล์ผิด → แจ้งกล่อง Error
+            baseDepth = new double[rows.size()][maxCols];
+            for (int r = 0; r < rows.size(); r++) {
+                double[] src = rows.get(r);
+                for (int c = 0; c < maxCols; c++) {
+                    if (c < src.length) {
+                        baseDepth[r][c] = src[c];
+                    }   else {
+                        baseDepth[r][c] = src[src.length - 1];
+                    }
+                }
+            }
+
+            btnCalc.setEnabled(true);//เปิดปุ่มคำนวณ
+            statusLabel.setText("Loaded: " + baseDepth.length + " rows × " + baseDepth[0].length + " cols.");
+            showEmptyGrid();
+            clearResultTableOnly();
+            totalVolLabel.setText("Total Volume: -");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error reading file:\n"+ex.getMessage(), "File Error", JOptionPane.ERROR_MESSAGE);
+            statusLabel.setText("Error loading file.");
+        }
+    }
+    //คำนวณ
+    private void onCalculate(ActionEvent ev) {
+        if (baseDepth == null) return;
+        double fluid;
+        try { fluid = Double.parseDouble(tfFluid.getText().trim()); }
+        catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "กรุณาใส่ตัวเลข Fluid Contact (m) ให้ถูกต้อง",
+                    "Invalid input", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int R = baseDepth.length, C = baseDepth[0].length;
+        JPanel grid = new JPanel(new GridLayout(R, C, 4, 4));
+        grid.setBackground(BG_MAIN);
+
+        double total = 0.0, area = CELL_W * CELL_L;
+        for (int r=0;r<R;r++) {
+            for (int c=0;c<C;c++) {
+                double base = baseDepth[r][c];
+                double top = base - TOP_OFFSET;
+                double full = TOP_OFFSET;//ความหนาช่องก๊าซได้สูงสุด
+                double gas = Math.max(0, Math.min(base, fluid) - top);//Max กันตัวเลขติดลบ
+                if (gas > full) gas = full;
+                double pct = (full>0)? (gas/full):0.0;
+                double vol = gas * area;
+                total += vol;
+
+                PillCell btn = new PillCell(pct, base, top, gas, fluid, vol, r, c);//สร้าง PillCell ใส่ค่าที่คำนวณ
+                styleCell(btn, pct);//เรียก styleCell เพื่อกำหนดสี/ตัวอักษร
+                btn.addActionListener(e -> toggleResultRow(btn));//ผูก Action ให้คลิกแล้ว toggleResultRow(btn) เพื่อเพิ่ม/ลบแถวในตารางผล
+                grid.add(btn);
+            }
+        }
+        dashboardWrap.removeAll();
+        dashboardWrap.add(new JScrollPane(grid), BorderLayout.CENTER);
+        dashboardWrap.revalidate();//แจ้งให้ dashboardWrap จัดวาง layout ใหม่ dashboardWrap.repaint();//สั่งให้ Swing วาดหน้าจอใหม่
+
+        totalVolLabel.setText("Total Volume: " + DF0.format(total) + " m³");
+        statusLabel.setText("Calculation complete.");
+        clearResultTableOnly();
+    }
+    //เพิ่ม/ลบแถวผลลัพธ์
+    private void toggleResultRow(PillCell cb) {
+        String key = cb.row + "," + cb.col;//ใช้คีย์ “row,col”
+        if (cb.isSelected()) {//ถ้าเลือก: เพิ่มแถว (Row,Col, Base,Top,Gas, Percent, Volume) และจำตำแหน่งใน rowIndexByKey
+            if (!rowIndexByKey.containsKey(key)) {
+                Object[] row = {
+                        cb.row, cb.col,
+                        DF0.format(cb.base),
+                        DF0.format(cb.top),
+                        DF0.format(cb.gas),
+                        DFP.format(cb.percent),
+                        DF0.format(cb.volume)
+                };
+                resultModel.addRow(row);
+                rowIndexByKey.put(key, resultModel.getRowCount()-1);
+            }
+        } else {//ถ้าไม่เลือก: ลบแถวที่แม็พไว้ แล้ว “สร้างแม็พใหม่” ให้ดัชนีตรงกับแถวปัจจุบัน
+            Integer idx = rowIndexByKey.remove(key);
+            if (idx != null && idx < resultModel.getRowCount()) {
+                resultModel.removeRow(idx);
+                // rebuild map
+                rowIndexByKey.clear();
+                for (int i=0;i<resultModel.getRowCount();i++) {
+                    int rr = Integer.parseInt(resultModel.getValueAt(i,0).toString());
+                    int cc = Integer.parseInt(resultModel.getValueAt(i,1).toString());
+                    rowIndexByKey.put(rr+","+cc, i);
+                }
+            }
+        }
+    }
+    //ล้างช่อง tfFluid, เคลียร์สถานะ/ยอดรวม และกริดว่าง (ถ้ามีข้อมูล)
+    private void clearAll() {
+        tfFluid.setText("");
+        totalVolLabel.setText("Total Volume: -");
+        statusLabel.setText("Cleared.");
+        clearResultTableOnly();
+        if (baseDepth != null) showEmptyGrid();
+    }
+    //เคลียร์แถวในตารางและแม็พ
+    private void clearResultTableOnly() {
+        resultModel.setRowCount(0);
+        rowIndexByKey.clear();
+    }
+
+    //วาดกริดเปล่า (แค่ช่องสีขาวขอบเทาอ่อน)
+    private void showEmptyGrid() {
+        JPanel grid = new JPanel(new GridLayout(baseDepth.length, baseDepth[0].length, 4, 4));
+        grid.setBackground(BG_MAIN);
+        for (int i=0;i<baseDepth.length*baseDepth[0].length;i++) {
+            JPanel cell = new JPanel();
+            cell.setBackground(Color.WHITE);
+            cell.setBorder(BorderFactory.createLineBorder(new Color(230,230,230)));
+            grid.add(cell);
+        }
+        dashboardWrap.removeAll();
+        dashboardWrap.add(new JScrollPane(grid), BorderLayout.CENTER);
+        dashboardWrap.revalidate(); dashboardWrap.repaint();
+    }
+    //เมธอดที่สร้าง Legend Panel สำหรับบอกความหมายของสีแดง/เหลือง/เขียวในตารางผลคำนวณ
+    private JPanel buildLegend() {
+        JPanel legend = new JPanel();
+        legend.setOpaque(false);//ให้โปร่ง
+        legend.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        legend.add(legendRow(RED,   "No Gas  = 0%"));
+        legend.add(legendRow(YELLOW,"Low Gas < 50%"));
+        legend.add(legendRow(GREEN, "High Gas ≥ 50%"));
+        return legend;
+    }
+    //สร้าง “1 แถวคำอธิบาย” ที่ประกอบด้วย สัญลักษณ์สี + ข้อความ
+    private JPanel legendRow(Color color, String text) {
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        row.setOpaque(false);
+        JPanel box = new JPanel();
+        box.setPreferredSize(new Dimension(14,14));//กำหนดขนาดที่ต้องการของคอมโพเนนต์
+        box.setBackground(color);
+        box.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
+        JLabel lb = new JLabel(text);
+        row.add(box); row.add(lb);
+        return row;
+    }
+    //กรอบหัวข้อมีเส้น+ระยะขอบ
+    private javax.swing.border.Border boxBorder(String title) {
+        return BorderFactory.createCompoundBorder(//สร้าง “เส้นขอบซ้อนกัน”  เอา Border 2 อันมาซ้อนกัน
+                BorderFactory.createTitledBorder(//เส้นขอบ (Border) ที่มีชื่อกำกับ
+                        BorderFactory.createLineBorder(new Color(220, 220, 220)),//สร้าง เส้นขอบ (Line Border)
+                        title),
+                new EmptyBorder(8,8,8,8)
+        );
+    }
+    //ข้อความกลางจอแบบจาง ก่อนเปิดไฟล์
+    private JPanel placeholder(String text) {
+        JPanel p = new JPanel(new BorderLayout());
+        p.setOpaque(false);
+        JLabel l = new JLabel(text, SwingConstants.CENTER);
+        l.setForeground(TXT_SECONDARY);
+        l.setFont(l.getFont().deriveFont(Font.ITALIC, 16f));
+        p.add(l, BorderLayout.CENTER);
+        return p;
+    }
+    //ปุ่มสไตล์พื้นฐาน
+    private void stylePrimary(JButton b) {
+        b.setBackground(new Color(245,245,245));
+        b.setForeground(TXT_PRIMARY);
+        b.setFocusPainted(false);
+    }
+
+    // ====== PillCell (ปุ่มพิลล์สีเต็ม) ======
+    static class PillCell extends JToggleButton { //สืบทอด JToggleButton เก็บข้อมูลของเซลล์ (percent, base, top, gas, fluid, volume, row, col)
+        final double percent, base, top, gas, fluid, volume;
+        final int row, col;
+        private static final int RADIUS = 10;
+        private static final int INSET  = 2;
+
+        PillCell(double percent, double base, double top, double gas, double fluid,
+                 double volume, int row, int col) {
+            this.percent = percent; this.base = base; this.top = top; this.gas = gas;
+            this.fluid = fluid; this.volume = volume; this.row = row; this.col = col;
+            setFocusPainted(false);
+            setContentAreaFilled(false);//ปิดการระบายสีพื้นหลังของพื้นที่ปุ่ม
+            setOpaque(false);//ไม่วาดพื้นหลังของตัวเอง (โปร่ง/ให้ของด้านหลังโผล่มา)
+            setBorder(BorderFactory.createEmptyBorder(4,6,4,6));
+            setHorizontalAlignment(SwingConstants.CENTER);//จัดกึ่งกลาง แนวนอน (ซ้าย ↔ ขวา)
+            setFont(getFont().deriveFont(Font.BOLD, 12f));
+        }
+
+    }
+
+    // กำหนดสี/ตัวอักษรตามเปอร์เซ็นต์
+    private void styleCell(AbstractButton b, double pct) {
+        if (pct <= 0) {
+            b.setBackground(RED);
+            b.setForeground(Color.BLACK);
+        } else if (pct < 0.5) {
+            b.setBackground(YELLOW);
+            b.setForeground(Color.BLACK);
+        } else {
+            b.setBackground(GREEN);
+            b.setForeground(Color.BLACK);
+        }
+        b.setBorder(BorderFactory.createLineBorder(Color.WHITE));//ขอบสีขาว
+        b.setFocusPainted(false);//ปิดการวาดเส้นกรอบโฟกัส
+        b.setOpaque(true);//วาดพื้นหลังของตัวเอง (ทึบ)
+        b.setFont(new Font("Segoe UI", Font.BOLD, 14));//ฟอนต์หนา
+        b.setHorizontalAlignment(SwingConstants.CENTER);//จัดกึ่งกลาง แนวนอน (ซ้าย ↔ ขวา)
+        b.setVerticalAlignment(SwingConstants.CENTER);//จัดกึ่งกลาง แนวตั้ง (บน ↕ ล่าง)
+        b.setMargin(new Insets(2, 2, 2, 2));
+        b.setText(DFP.format(pct)); //ตั้งข้อความเป็นเปอร์เซ็นต์
+    }
+
+    // main
+    public static void main(String[] args) {
+        GasCalculate proframe = new GasCalculate();
+        proframe.setVisible(true);
+
+    }
+
+}
+
