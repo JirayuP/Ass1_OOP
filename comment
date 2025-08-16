@@ -100,10 +100,10 @@ public class GasVolumeDashboardGUI extends JFrame {
         center.add(dashboardWrap, gc);
 
         String[] cols = {"Row","Col","Base (m)","Top (m)","Gas (m)","Percent","Volume (m³)"};
-        resultModel = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){return false;} };
+        resultModel = new DefaultTableModel(cols, 0){ @Override public boolean isCellEditable(int r,int c){return false;} };//การสร้าง TableModel แบบแก้ไขไม่ได้
         resultTable = new JTable(resultModel);
-        resultTable.setFillsViewportHeight(true);
-        resultTable.setAutoCreateRowSorter(true);
+        resultTable.setFillsViewportHeight(true);//ถ้าพื้นที่แสดงผล (viewport) ของตารางสูงกว่าความสูงจริงของแถวที่มี ให้เติมพื้นหลังของตารางจนเต็มพื้นที่
+        resultTable.setAutoCreateRowSorter(true);//การเรียงลำดับ  ของตารางให้อัตโนมัติ
         JPanel resultPanel = new JPanel(new BorderLayout());
         resultPanel.setBackground(BG_PANEL);
         resultPanel.setBorder(boxBorder("Result"));
@@ -131,16 +131,16 @@ public class GasVolumeDashboardGUI extends JFrame {
 
     //เปิดไฟล์
     private void onOpenFile(ActionEvent ev) {
-        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
-        File f = chooser.getSelectedFile();
+        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return; //ตรวจสอบว่า ผู้ใช้เลือกไฟล์จริงหรือไม่ ถ้าไม่ได้เลือก → หยุดการทำงาน ไม่ต้องอ่านไฟล์ต่อ
+        File f = chooser.getSelectedFile();//ดึงไฟล์ที่ผู้ใช้เลือกจาก JFileChooser ออกมาเป็นอ็อบเจ็กต์ File เพื่อนำไปใช้งานต่อ
         statusLabel.setText("Loading " + f.getName() + " ...");
         try {
             List<double[]> rows = new ArrayList<>();
             int maxCols = 0;
-            for (String line : Files.readAllLines(f.toPath(), StandardCharsets.UTF_8)) { //เปิดไฟล์ข้อความ UTF-8
-                String s = line.trim(); if (s.isEmpty()) continue;
+            for (String line : Files.readAllLines(f.toPath(), StandardCharsets.UTF_8)) { //อ่านทั้งไฟล์ เปิดไฟล์ข้อความ UTF-8
+                String s = line.trim();//ตัดช่องว่างเกิน (ซ้าย/ขวา) ของบรรทัดออก if (s.isEmpty()) continue; //ในไฟล์ว่าง ให้ข้ามไปคำสั่งถัดไป
                 String[] toks = s.split("[,\\s]+");//แยกค่าด้วยคอมม่า/ช่องว่าง
-                double[] arr = new double[toks.length];
+                double[] arr = new double[toks.length];//สร้างอาร์เรย์ชนิด double ขนาดเท่ากับจำนวน token ที่อ่านมา
                 for (int i=0;i<toks.length;i++) arr[i] = Double.parseDouble(toks[i]);
                 rows.add(arr); maxCols = Math.max(maxCols, arr.length);
             }
@@ -181,7 +181,7 @@ public class GasVolumeDashboardGUI extends JFrame {
                 double base = baseDepth[r][c];
                 double top = base - TOP_OFFSET;
                 double full = TOP_OFFSET;//ความหนาช่องก๊าซได้สูงสุด
-                double gas = Math.max(0, Math.min(base, fluid) - top);
+                double gas = Math.max(0, Math.min(base, fluid) - top);//Max กันตัวเลขติดลบ
                 if (gas > full) gas = full;
                 double pct = (full>0)? (gas/full):0.0;
                 double vol = gas * area;
@@ -195,7 +195,7 @@ public class GasVolumeDashboardGUI extends JFrame {
         }
         dashboardWrap.removeAll();
         dashboardWrap.add(new JScrollPane(grid), BorderLayout.CENTER);
-        dashboardWrap.revalidate(); dashboardWrap.repaint();//สรุปยอดรวมที่ totalVolLabel, อัปเดตสถานะ และเคลียร์ตารางเก่า
+        dashboardWrap.revalidate();//แจ้งให้ dashboardWrap จัดวาง layout ใหม่ dashboardWrap.repaint();//สั่งให้ Swing วาดหน้าจอใหม่
 
         totalVolLabel.setText("Total Volume: " + DF0.format(total) + " m³");
         statusLabel.setText("Calculation complete.");
@@ -204,8 +204,8 @@ public class GasVolumeDashboardGUI extends JFrame {
    //เพิ่ม/ลบแถวผลลัพธ์
     private void toggleResultRow(PillCell cb) {
         String key = cb.row + "," + cb.col;//ใช้คีย์ “row,col”
-        if (cb.isSelected()) {
-            if (!rowIndexByKey.containsKey(key)) {//ถ้าเลือก: เพิ่มแถว (Row,Col, Base,Top,Gas, Percent, Volume) และจำตำแหน่งใน rowIndexByKey
+        if (cb.isSelected()) {//ถ้าเลือก: เพิ่มแถว (Row,Col, Base,Top,Gas, Percent, Volume) และจำตำแหน่งใน rowIndexByKey
+            if (!rowIndexByKey.containsKey(key)) {
                 Object[] row = {
                         cb.row, cb.col,
                         DF0.format(cb.base),
