@@ -11,7 +11,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 
-public class GasVolumeDashboardGUI extends JFrame {
+public class GasCalculate extends JFrame {
 
     // Theme constants (ค่าคงที่สำหรับกำหนดสี)
     private static final Color BG_MAIN = new Color(245, 246, 248);
@@ -43,7 +43,7 @@ public class GasVolumeDashboardGUI extends JFrame {
     private final JFileChooser chooser = new JFileChooser(); // หน้าต่างสำหรับเลือกไฟล์
 
     //หน้าที่หลัก: เป็นเมธอดคอนสตรักเตอร์ (Constructor) ที่ใช้ในการ สร้างหน้าต่างโปรแกรมและจัดวางส่วนประกอบ UI ทั้งหมด
-    public GasVolumeDashboardGUI() {
+    public GasCalculate() {
         super("Gas Volume Calculator");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1200, 720));
@@ -373,7 +373,8 @@ public class GasVolumeDashboardGUI extends JFrame {
 
     // เมธอดหลักสำหรับรันโปรแกรม
     public static void main(String[] args) {
-        GasVolumeDashboardGUI proframe = new GasVolumeDashboardGUI();
+        GasCalculate proframe = new GasCalculate();
         proframe.setVisible(true);
     }
+
 }
